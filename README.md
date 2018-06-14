@@ -1,7 +1,8 @@
 # kong-smash
 This repository is to break kong with HTTP requests. There will be a server to sleep and a driver to destroy
 
-```./smash -h
+```
+./smash -h
 Usage of ./smash:
  -concurrency int
   	how many concurrent processes to run. Raise this to smash more (default 4)
@@ -10,4 +11,5 @@ Usage of ./smash:
  -requests int
   	how many requests to perform (default 1000)
  -url string
-  	url to smash (default "http://localhost:8282/simulate")```
+  	url to smash (default "http://localhost:8282/simulate")
+```
