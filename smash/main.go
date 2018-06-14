@@ -7,10 +7,14 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"sync/atomic"
 	"time"
 
 	"github.com/dathan/casync"
 )
+
+var fails int64
+var success int64
 
 func main() {
 	var tasks []*casync.Task
@@ -29,7 +33,7 @@ func main() {
 	// set up the concurrency
 	as := casync.NewAsync(*concurrency, tasks)
 	as.ExecuteTasks()
-	timeTrack(t0, "Execution Finished")
+	timeTrack(t0, fmt.Sprintf("Execution Finished - Success: %d Failures: %d", success, fails))
 	// gather timings
 	// write to file
 	// graph
@@ -52,12 +56,14 @@ func queryTask(url string, d int64) func() {
 		req, err := http.NewRequest("GET", url, nil)
 		if err != nil {
 			fmt.Printf("%s\n", err)
+			atomic.AddInt64(&fails, 1)
 			return
 		}
 
 		resp, err := client.Do(req)
 		if err != nil {
 			fmt.Printf("%s\n", err)
+			atomic.AddInt64(&fails, 1)
 			return
 		}
 
@@ -66,6 +72,7 @@ func queryTask(url string, d int64) func() {
 
 		if err != nil {
 			fmt.Printf("%s\n", err)
+			atomic.AddInt64(&fails, 1)
 			return
 		}
 
@@ -77,6 +84,7 @@ func queryTask(url string, d int64) func() {
 				fmt.Printf("ERROR %s\n", msg)
 			}
 
+			atomic.AddInt64(&fails, 1)
 			return
 		}
 
@@ -86,6 +94,8 @@ func queryTask(url string, d int64) func() {
 			fl := durnano / 1000000
 			log.Printf("Duration: %.2f\n", fl)
 		}
+
+		atomic.AddInt64(&success, 1)
 		return
 
 	}
