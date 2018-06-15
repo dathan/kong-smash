@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
 	"strconv"
 	"time"
@@ -17,7 +18,7 @@ type StructuredResponse struct {
 }
 
 func main() {
-
+	rand.Seed(time.Now().Unix())
 	http.HandleFunc("/simulate", SimulatePause)
 	//http.HandleFunc("/smashme", SimulatePause)
 	error := http.ListenAndServe(":8282", nil)
@@ -38,6 +39,7 @@ func SimulatePause(w http.ResponseWriter, r *http.Request) {
 		}
 
 		delay := r.FormValue("delay")
+		randy := r.FormValue("rand")
 		duration := time.Millisecond * 100
 		if len(delay) > 1 {
 			dvalue, err := strconv.ParseInt(delay, 10, 64)
@@ -46,6 +48,10 @@ func SimulatePause(w http.ResponseWriter, r *http.Request) {
 			}
 			if dvalue >= 0 {
 				duration = time.Millisecond * time.Duration(dvalue)
+				if len(randy) > 0 {
+					duration = time.Millisecond * time.Duration(rand.Int63n(dvalue))
+					//fmt.Printf("RANDOM IS CALLED: %d duration\n", duration)
+				}
 			}
 		}
 

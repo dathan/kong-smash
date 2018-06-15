@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strconv"
 	"sync/atomic"
 	"time"
 
@@ -23,11 +24,12 @@ func main() {
 	duration := flag.Int("delay", 0, "add a delay flag to cause the service to block in ms time")
 	URL := flag.String("url", "http://localhost:8282/simulate", "url to smash")
 	concurrency := flag.Int("concurrency", 4, "how many concurrent processes to run. Raise this to smash more")
+	randy := flag.Bool("random", false, "set a random delay with duration being the max")
 
 	flag.Parse()
 	// set up the number of tasks
 	for i := 0; i < *requests; i++ {
-		tsk := casync.NewTask(i, queryTask(*URL, int64(*duration)))
+		tsk := casync.NewTask(i, queryTask(*URL, int64(*duration), randy))
 		tasks = append(tasks, tsk)
 	}
 	// set up the concurrency
@@ -39,7 +41,7 @@ func main() {
 	// graph
 }
 
-func queryTask(url string, d int64) func() {
+func queryTask(url string, d int64, randomize *bool) func() {
 	return func() {
 		//setup client
 		tr := &http.Transport{
@@ -48,16 +50,22 @@ func queryTask(url string, d int64) func() {
 			DisableCompression: true,
 		}
 
-		if d > 0 {
-			url = fmt.Sprintf("%s?delay=%d", url, d)
-		}
-
 		client := &http.Client{Transport: tr}
 		req, err := http.NewRequest("GET", url, nil)
 		if err != nil {
 			fmt.Printf("%s\n", err)
 			atomic.AddInt64(&fails, 1)
 			return
+		}
+
+		if d > 0 {
+			q := req.URL.Query()
+			q.Add("delay", strconv.FormatInt(d, 10))
+			if *randomize {
+				q.Add("rand", "true")
+			}
+			req.URL.RawQuery = q.Encode()
+
 		}
 
 		resp, err := client.Do(req)
