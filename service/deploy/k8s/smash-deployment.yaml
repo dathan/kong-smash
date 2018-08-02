@@ -1,0 +1,29 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.1.0 (36652f6)
+  labels:
+    io.kompose.service: smash
+  name: smash
+spec:
+  replicas: 3
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        io.kompose.service: smash
+    spec:
+      containers:
+      - name: smash
+        image: quay.io/wework/kong-smash-service:latest
+        ports:
+          - containerPort: 8282
+        resources: {}
+        stdin: true
+        tty: true
+        imagePullPolicy: Always
+      imagePullSecrets:
+        - name: registrypullsecret

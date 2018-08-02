@@ -1,0 +1,20 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: smash
+  namespace: concierge
+  annotations:
+    kubernetes.io/ingress.class: nginx-external
+spec:
+  rules:
+    - host: smash.alpha.wek8s.com
+      http:
+        paths:
+        - backend:
+            serviceName: smash
+            servicePort: 80
+          path: /
+status:
+  loadBalancer:
+    ingress:
+    - hostname: a3d103ee5945711e8b1a3068e48e5ce7-441275998.us-west-2.elb.amazonaws.com
